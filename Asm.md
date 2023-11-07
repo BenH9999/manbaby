@@ -1,0 +1,37 @@
+# Assembler
+
+## Control Flow
+- [ ] Read in a file.
+- [ ] Apply the preprocessing.
+- [ ] Run the main assembler.
+- [ ] Save the output to a file.
+
+## Preproccesser
+
+- [ ] Remove comments.
+- [ ] Remove empty lines.
+- [ ] Map labels to memory locations (The line they are on)
+- [ ] Replace labels with the corresponding memory location 
+
+## Main Assembler
+Note: The machine code should be little endian (e.g. 1000000 would be 1 not 128)
+- [ ] Extract the 'Operand Line' and instruction name from each line.
+### If name != VAR:
+   - [ ] Convert the instruction name to its 'Function Number'
+   - [ ] Set bits 0-4 to the 'Operand Line'
+   - [ ] Set bits 13-15 to the 'Function Number'
+### Else:
+   - [ ] Set the 32 bit number to the 'Operand Line' (Operand Line should be 32bits instead of 4/8 because of the use-case)
+
+## Extensions:
+
+- [ ] More instructions.
+- [ ] Immediate addressing.
+   - [ ] Define how these addressing modes are encoded.
+
+- [ ] Error detection:
+   - [ ] Invalid instructions. 
+   - [ ] Syntax errors.
+   - [ ] Undeclared variables/labels.
+
+- [ ] Create user documentation to explain how to use the assembler, its features, and the extensions.
