@@ -21,7 +21,7 @@ Note: The machine code should be little endian (e.g. 1000000 would be 1 not 128)
    - [ ] Set bits 0-4 to the 'Operand Line'
    - [ ] Set bits 13-15 to the 'Function Number'
 ### Else:
-   - [ ] Set the 32 bit number to the 'Operand Line' (Operand Line should be 32bits instead of 4/8 because of the use-case)
+   - [ ] Set the line to the value given by var
 
 ## Extensions:
 
