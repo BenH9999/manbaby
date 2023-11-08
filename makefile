@@ -1,2 +1,3 @@
 all:
-	g++ -o main *.cpp -Wall
+	g++ -o asm Asm.cpp -Wall
+#add when existing: g++ -o sim Sim.cpp -Wall
