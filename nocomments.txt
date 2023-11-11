@@ -1,0 +1,10 @@
+          VAR 0       
+START:    LDN NUM01   
+          SUB NUM02   
+          STO MYSUM   
+          LDN MYSUM   
+          STO MYSUM   
+END:      STP         
+NUM01:    VAR 1025    
+NUM02:    VAR 621     
+MYSUM:    VAR 0  
