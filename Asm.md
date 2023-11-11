@@ -1,15 +1,15 @@
 # Assembler
 
 ## Control Flow
-- [ ] Read in a file.
+- [X] Read in a file.
 - [ ] Apply the preprocessing.
 - [ ] Run the main assembler.
 - [ ] Save the output to a file.
 
 ## Preproccesser
 
-- [ ] Remove comments.
-- [ ] Remove empty lines.
+- [X] Remove comments.
+- [X] Remove empty lines.
 - [ ] Map labels to memory locations (The line they are on)
 - [ ] Replace labels with the corresponding memory location 
 
