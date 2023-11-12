@@ -11,7 +11,7 @@
 - [X] Remove comments.
 - [X] Remove empty lines.
 - [X] Map labels to memory locations (The line they are on)
-- [ ] Replace labels with the corresponding memory location 
+- [X] Replace labels with the corresponding memory location 
 
 ## Main Assembler
 Note: The machine code should be little endian (e.g. 1000000 would be 1 not 128)

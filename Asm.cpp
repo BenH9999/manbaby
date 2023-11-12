@@ -10,10 +10,51 @@ int main(){
     return 0;
 }
 
+void mapLabels() {
+    int address = 0;
+    for(std::string& s : asmFromFile){
+        size_t pos = s.find(':');
+        if(pos != std::string::npos){
+            labelsFromAsm[s.substr(0,pos)] = address;
+            labelNames.push_back(s.substr(0,pos));
+            s = s.substr(pos+1);
+        }
+        address++;
+    }
+    std::sort(labelNames.begin(), labelNames.end(), [](const std::string a, const std::string b) {
+        return a.length() > b.length();
+    });
+}
+
 void processAll(){
     readAsmFromFile();
     removeCommentsAndEmptyLines();
-    mapAndRemoveLabels();
+    mapLabels();
+    removeLabels();
+}
+
+void trim(std::string &s) {
+    const char* ws = " \t\r\n";
+
+    size_t start = s.find_first_not_of(ws);
+    if (start != std::string::npos)
+        s = s.substr(start);
+
+    size_t end = s.find_last_not_of(ws);
+    if (end != std::string::npos)
+        s = s.substr(0,end+1);
+}
+
+void removeLabels() {
+    for (std::string &line : asmFromFile)
+    {
+        for (std::string label : labelNames)
+        {
+            std::string pattern = "\\b" + label + "\\b";
+            line = std::regex_replace(line, std::regex(pattern), std::to_string(labelsFromAsm[label]));
+        }
+        trim(line);
+    }   
 }
 
 void removeCommentsAndEmptyLines() {
@@ -35,7 +76,8 @@ void removeCommentsAndEmptyLines() {
 }
 
 //FUNCTION WITH BROKEN REPLACEMENT
-/*void mapAndRemoveLabels(){
+/*
+void mapAndRemoveLabels(){
     int address = 0;
     for(std::string& s : asmFromFile){
         size_t pos = s.find(':');
@@ -50,7 +92,6 @@ void removeCommentsAndEmptyLines() {
             //s = std::regex_replace(s, labelRegex, std::to_string(label.second));
             std::string labelWithSpace = label.first + " ";
             std::string replacement = std::to_string(label.second) + " ";
-
             size_t pos = 0;
 
             // Replace all occurrences of the label in the line
@@ -60,9 +101,11 @@ void removeCommentsAndEmptyLines() {
             }
         }
     }
-}*/
+}
+*/
 
 //FUNCTION WITH BROKEN SPACING
+/*
 void mapAndRemoveLabels() {
     int address = 0;
 
@@ -86,6 +129,7 @@ void mapAndRemoveLabels() {
         s = std::regex_replace(s, std::regex("\\s+"), " ");
     }
 }
+*/
 
 void readAsmFromFile(){
     std::string fileName = "BabyTest1-Assembler.txt";
