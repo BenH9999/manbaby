@@ -34,21 +34,56 @@ void removeCommentsAndEmptyLines() {
 
 }
 
-void mapAndRemoveLabels(){
+//FUNCTION WITH BROKEN REPLACEMENT
+/*void mapAndRemoveLabels(){
     int address = 0;
     for(std::string& s : asmFromFile){
         size_t pos = s.find(':');
         if(pos != std::string::npos){
             labelsFromAsm[s.substr(0,pos)] = address;
-            //s.replace(0,pos+1,std::to_string(address)+":");
         }
         address++;
     }
     for(std::string& s : asmFromFile){
         for(std::pair<std::string,int> label : labelsFromAsm){
-            size_t pos = s.find(label.first);
-            //if(pos != )
+            //std::regex labelRegex("\\b" + label.first + "\\b");
+            //s = std::regex_replace(s, labelRegex, std::to_string(label.second));
+            std::string labelWithSpace = label.first + " ";
+            std::string replacement = std::to_string(label.second) + " ";
+
+            size_t pos = 0;
+
+            // Replace all occurrences of the label in the line
+            while ((pos = s.find(labelWithSpace, pos)) != std::string::npos) {
+                s.replace(pos, labelWithSpace.length(), replacement);
+                pos += replacement.length();
+            }
         }
+    }
+}*/
+
+//FUNCTION WITH BROKEN SPACING
+void mapAndRemoveLabels() {
+    int address = 0;
+
+    for (const std::string& s : asmFromFile) {
+        size_t pos = s.find(':');
+        if (pos != std::string::npos) {
+            labelsFromAsm[s.substr(0, pos)] = address;
+        }
+        address++;
+    }
+
+    for (std::string& s : asmFromFile) {
+        for (const auto& label : labelsFromAsm) {
+            std::string labelWithSpace = label.first;
+            std::string replacement = std::to_string(label.second);
+
+            std::regex labelRegex("\\b" + label.first + "\\b");
+            s = std::regex_replace(s, labelRegex, replacement);
+        }
+
+        s = std::regex_replace(s, std::regex("\\s+"), " ");
     }
 }
 

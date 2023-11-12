@@ -10,7 +10,7 @@
 
 - [X] Remove comments.
 - [X] Remove empty lines.
-- [ ] Map labels to memory locations (The line they are on)
+- [X] Map labels to memory locations (The line they are on)
 - [ ] Replace labels with the corresponding memory location 
 
 ## Main Assembler
