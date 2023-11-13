@@ -82,6 +82,8 @@ void mapFunctionNumbers(){
     functionNumbers["SUB"] = 4;
     functionNumbers["CMP"] = 6;
     functionNumbers["STP"] = 7;
+    functionNumbers["WAT"] = 8;
+    functionNumbers["DIS"] = 9;
 }
 
 void trim(std::string &s) {
