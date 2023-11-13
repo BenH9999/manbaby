@@ -6,7 +6,7 @@ int main(){
     for (const std::string& line : asmFromFile) {
         std::cout << line << std::endl;
     }
-    std::cout << "\n";
+    std::cout << std::endl;
     for(size_t i = 0; i < machineCode.size();i++){
         for (int j = 0; j < 32; j++)
         {
@@ -24,14 +24,10 @@ void mapLabels() {
         size_t pos = s.find(':');
         if(pos != std::string::npos){
             labelsFromAsm[s.substr(0,pos)] = address;
-            labelNames.push_back(s.substr(0,pos));
             s = s.substr(pos+1);
         }
         address++;
     }
-    std::sort(labelNames.begin(), labelNames.end(), [](const std::string a, const std::string b) {
-        return a.length() > b.length();
-    });
 }
 
 void processAll(){
@@ -54,22 +50,19 @@ void assemble(){
         iss >> instruction;
 
         if(instruction != "VAR"){
-            int operand, functionNo;
+            int operand, functionNo, machineCodeInt;
 
             functionNo = functionNumbers[instruction];
-
             iss >> operand;
 
-            int machineCodeInt = (functionNo << 13);
             if(operand > 4095){
                 int first = (operand & 0b111111111111); 
-                int second = operand & 0b0000000000001111111111111111;
-                machineCodeInt = first | functionNo << 13 | second << 16;
+                int second = operand >> 12;
+                machineCodeInt = first | (functionNo << 12) | (second << 16);
             }   
             else  {
-                machineCodeInt |=  operand;
+                machineCodeInt = operand | (functionNo << 12);
             }
-
 
             machineCode.push_back(machineCodeInt);
         }
@@ -106,10 +99,10 @@ void trim(std::string &s) {
 void removeLabels() {
     for (std::string &line : asmFromFile)
     {
-        for (std::string label : labelNames)
+        for (std::pair<std::string, int> labelPair : labelsFromAsm)
         {
-            std::string pattern = "\\b" + label + "\\b";
-            line = std::regex_replace(line, std::regex(pattern), std::to_string(labelsFromAsm[label]));
+            std::string pattern = "\\b" + labelPair.first + "\\b";
+            line = std::regex_replace(line, std::regex(pattern), std::to_string(labelsFromAsm[labelPair.first]));
         }
         trim(line);
     }   

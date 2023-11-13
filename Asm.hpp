@@ -12,7 +12,6 @@ std::unordered_map<std::string, int> functionNumbers;
 std::vector<std::string> asmFromFile;
 std::vector<std::string> modifiedLines;
 std::unordered_map<std::string, int> labelsFromAsm;
-std::vector<std::string> labelNames;
 std::vector<int> machineCode;
 
 void processAll();
