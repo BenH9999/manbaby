@@ -4,7 +4,7 @@
 - [X] Read in a file.
 - [X] Apply the preprocessing.
 - [X] Run the main assembler.
-- [ ] Save the output to a file.
+- [X] Save the output to a file.
 
 ## Preproccesser
 

@@ -39,6 +39,7 @@ void processAll(){
 
     //Main Assembler
     assemble();
+    writeMachineCodeToFile();
 }
 
 void assemble(){
@@ -119,6 +120,16 @@ void removeCommentsAndEmptyLines() {
         asmFromFile.end()
     );
 
+}
+
+void writeMachineCodeToFile(){
+    std::ofstream file("machineCodeOut.txt");
+
+    for(size_t i = 0; i < machineCode.size(); i++){
+        file << std::bitset<32>(machineCode[i]) << "\n";
+    }
+
+    file.close();
 }
 
 void readAsmFromFile(){

@@ -23,3 +23,4 @@ void removeCommentsAndEmptyLines();
 void mapLabels();
 void removeLabels();
 void assemble();
+void writeMachineCodeToFile();
