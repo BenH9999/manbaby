@@ -8,7 +8,11 @@ int main(){
     }
     std::cout << "\n";
     for(size_t i = 0; i < machineCode.size();i++){
-        std::cout << std::bitset<32>(machineCode[i]) << std::endl;
+        for (int j = 0; j < 32; j++)
+        {
+            std::cout << (( machineCode[i] >> j ) & 0x1);
+        }
+        std::cout << std::endl;
     }
 
     return 0;
@@ -52,13 +56,20 @@ void assemble(){
         if(instruction != "VAR"){
             int operand, functionNo;
 
-            iss >> operand;
-            operand &= 0x1F;
-
             functionNo = functionNumbers[instruction];
-            functionNo &= 0x07;
 
-            int machineCodeInt = operand | (functionNo << 13);
+            iss >> operand;
+
+            int machineCodeInt = (functionNo << 13);
+            if(operand > 4095){
+                int first = (operand & 0b111111111111); 
+                int second = operand & 0b0000000000001111111111111111;
+                machineCodeInt = first | functionNo << 13 | second << 16;
+            }   
+            else  {
+                machineCodeInt |=  operand;
+            }
+
 
             machineCode.push_back(machineCodeInt);
         }
@@ -126,7 +137,11 @@ void writeMachineCodeToFile(){
     std::ofstream file("machineCodeOut.txt");
 
     for(size_t i = 0; i < machineCode.size(); i++){
-        file << std::bitset<32>(machineCode[i]) << "\n";
+        for (int j = 0; j < 32; j++)
+        {
+            file << (( machineCode[i] >> j ) & 0x1);
+        }
+        file << "\n";
     }
 
     file.close();

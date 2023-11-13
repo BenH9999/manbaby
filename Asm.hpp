@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <unordered_map>
 #include <regex>
-#include <iomanip>
 #include <bitset>
 
 std::unordered_map<std::string, int> functionNumbers;
