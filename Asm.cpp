@@ -6,6 +6,10 @@ int main(){
     for (const std::string& line : asmFromFile) {
         std::cout << line << std::endl;
     }
+    std::cout << "\n";
+    for(size_t i = 0; i < machineCode.size();i++){
+        std::cout << std::bitset<32>(machineCode[i]) << std::endl;
+    }
 
     return 0;
 }
@@ -27,10 +31,52 @@ void mapLabels() {
 }
 
 void processAll(){
+    //preprocessor
     readAsmFromFile();
     removeCommentsAndEmptyLines();
     mapLabels();
     removeLabels();
+
+    //Main Assembler
+    assemble();
+}
+
+void assemble(){
+    mapFunctionNumbers();
+    for(std::string s : asmFromFile){
+        std::istringstream iss(s);
+        std::string instruction;
+        iss >> instruction;
+
+        if(instruction != "VAR"){
+            int operand, functionNo;
+
+            iss >> operand;
+            operand &= 0x1F;
+
+            functionNo = functionNumbers[instruction];
+            functionNo &= 0x07;
+
+            int machineCodeInt = operand | (functionNo << 13);
+
+            machineCode.push_back(machineCodeInt);
+        }
+        else{
+            int varValue;
+            iss >> varValue;
+            machineCode.push_back(varValue);
+        }
+    }
+}
+
+void mapFunctionNumbers(){
+    functionNumbers["JMP"] = 0;
+    functionNumbers["JRP"] = 1;
+    functionNumbers["LDN"] = 2;
+    functionNumbers["STO"] = 3;
+    functionNumbers["SUB"] = 4;
+    functionNumbers["CMP"] = 6;
+    functionNumbers["STP"] = 7;
 }
 
 void trim(std::string &s) {
@@ -74,62 +120,6 @@ void removeCommentsAndEmptyLines() {
     );
 
 }
-
-//FUNCTION WITH BROKEN REPLACEMENT
-/*
-void mapAndRemoveLabels(){
-    int address = 0;
-    for(std::string& s : asmFromFile){
-        size_t pos = s.find(':');
-        if(pos != std::string::npos){
-            labelsFromAsm[s.substr(0,pos)] = address;
-        }
-        address++;
-    }
-    for(std::string& s : asmFromFile){
-        for(std::pair<std::string,int> label : labelsFromAsm){
-            //std::regex labelRegex("\\b" + label.first + "\\b");
-            //s = std::regex_replace(s, labelRegex, std::to_string(label.second));
-            std::string labelWithSpace = label.first + " ";
-            std::string replacement = std::to_string(label.second) + " ";
-            size_t pos = 0;
-
-            // Replace all occurrences of the label in the line
-            while ((pos = s.find(labelWithSpace, pos)) != std::string::npos) {
-                s.replace(pos, labelWithSpace.length(), replacement);
-                pos += replacement.length();
-            }
-        }
-    }
-}
-*/
-
-//FUNCTION WITH BROKEN SPACING
-/*
-void mapAndRemoveLabels() {
-    int address = 0;
-
-    for (const std::string& s : asmFromFile) {
-        size_t pos = s.find(':');
-        if (pos != std::string::npos) {
-            labelsFromAsm[s.substr(0, pos)] = address;
-        }
-        address++;
-    }
-
-    for (std::string& s : asmFromFile) {
-        for (const auto& label : labelsFromAsm) {
-            std::string labelWithSpace = label.first;
-            std::string replacement = std::to_string(label.second);
-
-            std::regex labelRegex("\\b" + label.first + "\\b");
-            s = std::regex_replace(s, labelRegex, replacement);
-        }
-
-        s = std::regex_replace(s, std::regex("\\s+"), " ");
-    }
-}
-*/
 
 void readAsmFromFile(){
     std::string fileName = "BabyTest1-Assembler.txt";
