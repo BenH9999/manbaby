@@ -3,7 +3,10 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-typedef signed int int32_t;
+
+#ifdef _WIN32
+    typedef signed int int32_t;
+#endif
 
 bool halted = false;
 
