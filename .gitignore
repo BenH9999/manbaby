@@ -32,3 +32,6 @@
 *.app
 main
 .vscode
+asm
+sim
+flag
