@@ -1,5 +1,9 @@
 #include <iostream>
 #include <bitset>
+#include <fstream>
+#include <string>
+#include <algorithm>
+typedef signed int int32_t;
 
 bool halted = false;
 
@@ -56,8 +60,27 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
     }
 }
 
+void readFile(int32_t *intPtr, std::string fileName) {
+    std::ifstream file(fileName);
+    std::string fileLine;
+    int count = 0;
+    while(getline(file, fileLine)){
+        reverse(fileLine.begin(), fileLine.end());
+        intPtr[count] = 0;
+        for (int i = 0; i < fileLine.length(); i++) {
+        intPtr[count] |= (fileLine[i]-'0') << (fileLine.length()-i)-1;
+        }
+        count++;
+        if (count >= 32) {
+            std::cout<<"Error, file to long";
+            break;
+        }
+    }
+    file.close();
+}
+
 int main() {
-    int32_t store[32] = { 
+    /*int32_t store[32] = { 
         0b00000000000000000000000000000000,
         0b00000000000000000100000000000111,
         0b00000000000000001000000000001000,
@@ -68,7 +91,11 @@ int main() {
         0b00000000000000000000010000000001,
         0b00000000000000000000001001101101,
         0b00000000000000000000000000000000,
-    };
+    };*/
+    int32_t store[32];
+    std::string fileName = "BabyTest1-MC.txt";
+    readFile(store, fileName);
+    
     control cont;
     accumulator cum;
     instruction instruct;
