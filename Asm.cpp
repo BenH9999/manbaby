@@ -1,5 +1,7 @@
 #include "Asm.hpp"
 
+std::vector<std::string> labelNames;
+
 int main(){
     processAll();
 
@@ -14,8 +16,12 @@ int main(){
         }
         std::cout << std::endl;
     }
-
+    
     return 0;
+}
+
+int length_sort(const std::string a, const std::string b) {
+    return a.length() > b.length();
 }
 
 void mapLabels() {
@@ -23,11 +29,14 @@ void mapLabels() {
     for(std::string& s : asmFromFile){
         size_t pos = s.find(':');
         if(pos != std::string::npos){
-            labelsFromAsm[s.substr(0,pos)] = address;
+            std::string label = s.substr(0,pos);
+            labelsFromAsm[label] = address;
+            labelNames.push_back(label) ;
             s = s.substr(pos+1);
         }
         address++;
     }
+    std::sort(labelNames.begin(), labelNames.end(),length_sort);
 }
 
 void processAll(){
@@ -101,10 +110,12 @@ void trim(std::string &s) {
 void removeLabels() {
     for (std::string &line : asmFromFile)
     {
-        for (std::pair<std::string, int> labelPair : labelsFromAsm)
+        for (std::string label : labelNames)
         {
-            std::string pattern = "\\b" + labelPair.first + "\\b";
-            line = std::regex_replace(line, std::regex(pattern), std::to_string(labelsFromAsm[labelPair.first]));
+            size_t location = line.find(label);
+            if(location == std::string::npos)
+                continue;
+            line.replace(location, label.length(), std::to_string(labelsFromAsm[label]));
         }
         trim(line);
     }   
