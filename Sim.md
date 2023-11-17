@@ -20,7 +20,7 @@
    - [X] CMP
    - [X] STP
 
-- [ ] Read and parse the machine code input.
+- [X] Read and parse the machine code input.
 
 ## Extensions:
 ### Simulator Functionality
