@@ -25,8 +25,8 @@
 ## Extensions:
 ### Simulator Functionality
 - [ ] Add options for:
-   - [ ] Increased Memory.
-   - [ ] More instructions.
+   - [X] Increased Memory.
+   - [X] More instructions.
    - [ ] Immediate addressing.
       - [ ] Define how these addressing modes are decoded.
 - [ ] Error handling:
@@ -34,5 +34,5 @@
    - [ ] Out-of-bounds memory access
 
 ### Other
-- [ ] Develop more assembly language programs
+- [X] Develop more assembly language programs
 - [ ] Create user documentation to explain how to use the simulator, its features, and the extensions.
