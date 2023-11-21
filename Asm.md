@@ -26,8 +26,8 @@ Note: The machine code should be little endian (e.g. 1000000 would be 1 not 128)
 ## Extensions:
 
 - [X] More instructions.
-- [ ] Immediate addressing.
-   - [ ] Define how these addressing modes are encoded.
+- [X] Immediate addressing.
+   - [X] Define how these addressing modes are encoded. (Last bit 1 if immediate)
 
 - [ ] Error detection:
    - [ ] Invalid instructions. 

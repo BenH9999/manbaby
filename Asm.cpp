@@ -57,20 +57,27 @@ void assemble(){
         std::istringstream iss(s);
         std::string instruction;
         iss >> instruction;
+        int immediate = 0;
 
         if(instruction != "VAR"){
             int operand, functionNo, machineCodeInt;
+            std::string operandString;
 
             functionNo = functionNumbers[instruction];
-            iss >> operand;
-
+            iss >> operandString;
+            if(operandString[0] == '#') {
+                std::istringstream(operandString.substr(1)) >> operand;
+                immediate = 1;
+            } else {
+                std::istringstream(operandString) >> operand;
+            }
             if(operand > 4095){
                 int first = (operand & 0b111111111111); 
-                int second = operand >> 12;
-                machineCodeInt = first | (functionNo << 12) | (second << 16);
+                int second = (operand >> 12) & 0x7FFF;
+                machineCodeInt = first | (functionNo << 12) | (second << 16) | (immediate << 31);
             }   
             else  {
-                machineCodeInt = operand | (functionNo << 12);
+                machineCodeInt = operand | (functionNo << 12) | (immediate << 31);
             }
 
             machineCode.push_back(machineCodeInt);
@@ -154,7 +161,7 @@ void writeMachineCodeToFile(){
 }
 
 void readAsmFromFile(){
-    std::string fileName = "programs/src/bad_apple.asm";
+    std::string fileName = "BabyTest1-Assembler.txt";
     std::ifstream file(fileName);
     std::string buff;
 
