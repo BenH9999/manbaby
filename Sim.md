@@ -27,8 +27,8 @@
 - [ ] Add options for:
    - [X] Increased Memory.
    - [X] More instructions.
-   - [ ] Immediate addressing.
-      - [ ] Define how these addressing modes are decoded.
+   - [X] Immediate addressing.
+      - [X] Define how these addressing modes are decoded. (Last bit 1 if immediate)
 - [ ] Error handling:
    - [ ] Invalid instructions
    - [ ] Out-of-bounds memory access

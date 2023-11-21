@@ -26,6 +26,7 @@ struct control {
 struct instruction {
     int32_t operand;
     int32_t opcode;
+    bool immediate;
 };
 
 void fetchInstruction(control &controlInst, int32_t store[]) {
@@ -33,13 +34,19 @@ void fetchInstruction(control &controlInst, int32_t store[]) {
 }
 
 instruction decode(control controlInst) {
-    int first_twelve = controlInst.PI & 0b111111111111;
-    int last_sixteen = controlInst.PI >> 16;
-    int address = first_twelve | (last_sixteen << 12);
-
-    return (instruction) {
+    int first_twelve = controlInst.PI & 0b111111111111; // Masking to get the 12 least significant bits
+    int last_fifteen = (controlInst.PI & 0b0111111111111111 >> 16); // Shifting 13 bits to the right for the last 15 bits and masking
+    int address = first_twelve | (last_fifteen << 12);
+    bool immediate = controlInst.PI & (1 << 31);
+    //for (int i = 32 - 1; i >= 0; i--) {
+    //    int bit = (controlInst.PI >> i) & 1;
+    //    std::cout << bit;
+    //}
+    //std::cout << std::endl;
+    return instruction {
         .operand = address,
-        .opcode = (controlInst.PI >> 12) & 0b1111
+        .opcode = (controlInst.PI >> 12) & 0xF, // Shifting 12 bits to the right for the 4-bit opcode and masking
+        .immediate = immediate
     };
 }
 
@@ -61,28 +68,28 @@ void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
 }
 
 void execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
-    //std::cout << "CI: " << cont.CI << std::endl;
-    //if (cont.CI == 26) {
-    //    //displayLine(store[26]);
-    //    //std::cout << inst.opcode << std::endl;
-    //}
+    int32_t value = store[inst.operand];
+    if(inst.immediate) {
+        value = inst.operand;
+    }
+    //std::cout << "Opcode: " << inst.opcode << " Address: " << inst.operand << std::endl;
 
     switch (inst.opcode) {
         case 0b000:
-            cont.CI = (store[inst.operand] - 1);
+            cont.CI = (value - 1);
             break;
         case 0b001:
-            cont.CI += (store[inst.operand] - 1);
+            cont.CI += (value - 1);
             break;
         case 0b010:
-            acc = -store[inst.operand];
+            acc = -value;
             break;
         case 0b011:
             store[inst.operand] = acc;
             break;
         case 0b100:
         case 0b101:
-            acc -= store[inst.operand];
+            acc -= value;
             break;
         case 0b110:
             if (acc < 0)
@@ -139,7 +146,7 @@ int main() {
     }*/;
 
     int32_t* store = new int32_t[MAX_MEM];
-    std::string fileName = "programs/bad_apple_works.mc";
+    std::string fileName = "machineCodeOut.txt";
     readFile(store, fileName);
     control cont;
     accumulator cum;
@@ -150,7 +157,7 @@ int main() {
         instruct = decode(cont);
         execute(instruct, cont, cum, store);
     }
-
-    //std::cout << store[18] << std::endl;
+    //displayMemory(store,32,0);
+    std::cout << store[9] << std::endl;
     return 0;
 }
