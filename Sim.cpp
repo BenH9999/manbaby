@@ -33,20 +33,22 @@ void fetchInstruction(control &controlInst, int32_t store[]) {
     controlInst.PI = store[controlInst.CI];
 }
 
+void printBits(int num) {
+    for (int i = 32 - 1; i >= 0; i--) {
+        int bit = (num >> i) & 1;
+        std::cout << bit;
+    }
+    std::cout << std::endl;
+}
+
 instruction decode(control controlInst) {
-    int first_twelve = controlInst.PI & 0b111111111111; // Masking to get the 12 least significant bits
-    int last_fifteen = (controlInst.PI & 0b0111111111111111 >> 16); // Shifting 13 bits to the right for the last 15 bits and masking
-    int address = first_twelve | (last_fifteen << 12);
-    bool immediate = controlInst.PI & (1 << 31);
-    //for (int i = 32 - 1; i >= 0; i--) {
-    //    int bit = (controlInst.PI >> i) & 1;
-    //    std::cout << bit;
-    //}
-    //std::cout << std::endl;
+    int first_twelve = controlInst.PI & 0b111111111111;
+    int last_sixteen = (controlInst.PI >> 16) &0b0111111111111111;
+    int address = first_twelve | (last_sixteen << 12);
     return instruction {
         .operand = address,
-        .opcode = (controlInst.PI >> 12) & 0xF, // Shifting 12 bits to the right for the 4-bit opcode and masking
-        .immediate = immediate
+        .opcode = (controlInst.PI >> 12) & 0b1111,
+        .immediate = !!(controlInst.PI & (1 << 31))
     };
 }
 
@@ -62,6 +64,7 @@ void displayLine(int32_t line) {
 }
 
 void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
+    std::cout << "Cum: " << acc << "Num: " << numberOfLines << std::endl;
     std::cout << "\033[2J\033[H";
     for (int32_t i = acc; i < numberOfLines; i++)
         displayLine(store[i]);
@@ -69,14 +72,11 @@ void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
 
 void execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
     int32_t value = store[inst.operand];
-    if(inst.immediate) {
-        value = inst.operand;
-    }
-    //std::cout << "Opcode: " << inst.opcode << " Address: " << inst.operand << std::endl;
-
     switch (inst.opcode) {
         case 0b000:
             cont.CI = (value - 1);
+            std::cout << cont.CI << std::endl;
+            printBits(store[cont.CI+1]);
             break;
         case 0b001:
             cont.CI += (value - 1);
@@ -151,13 +151,15 @@ int main() {
     control cont;
     accumulator cum;
     instruction instruct;
+    int count = 0;
+    cont.CI = 25;
     while (!halted) {
         cont.CI++;
         fetchInstruction(cont, store);
         instruct = decode(cont);
         execute(instruct, cont, cum, store);
     }
+    
     //displayMemory(store,32,0);
-    std::cout << store[9] << std::endl;
     return 0;
 }

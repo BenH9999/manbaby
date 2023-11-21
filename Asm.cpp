@@ -161,7 +161,7 @@ void writeMachineCodeToFile(){
 }
 
 void readAsmFromFile(){
-    std::string fileName = "BabyTest1-Assembler.txt";
+    std::string fileName = "programs/src/bad_apple.asm";
     std::ifstream file(fileName);
     std::string buff;
 

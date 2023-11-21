@@ -1,5 +1,5 @@
 		VAR 0
-		JMP ENTER
+		JMP #26
 		VAR 0
 		VAR 0
 		VAR 0
