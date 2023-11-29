@@ -72,14 +72,16 @@ void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
 
 void execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
     int32_t value = store[inst.operand];
+    if(inst.immediate)
+        value = inst.operand;
     switch (inst.opcode) {
         case 0b000:
-            cont.CI = (value - 1);
+            cont.CI = (value);
             std::cout << cont.CI << std::endl;
             printBits(store[cont.CI+1]);
             break;
         case 0b001:
-            cont.CI += (value - 1);
+            cont.CI += (value);
             break;
         case 0b010:
             acc = -value;
@@ -100,13 +102,13 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
             break;
         // Extened Instruction Set:
         case 0b1000:
-            msleep(inst.operand);
+            msleep(value);
             break;
         case 0b1001:
-            displayMemory(store,inst.operand,acc);
+            displayMemory(store,value,acc);
             break;
         default:
-            std::cout << "Unknowen Instruction: " << inst.opcode << std::endl;
+            std::cout << "Unknown Instruction: " << inst.opcode << std::endl;
             halted=true;
             break;
     }
@@ -151,8 +153,7 @@ int main() {
     control cont;
     accumulator cum;
     instruction instruct;
-    int count = 0;
-    cont.CI = 25;
+    cont.CI = 0;
     while (!halted) {
         cont.CI++;
         fetchInstruction(cont, store);
