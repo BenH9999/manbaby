@@ -169,7 +169,11 @@ int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
     return 0;
 }
 
+
+//TODO: fix this it is broken!
 int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
+    std::cout << "Addr: " << cont.CI << std::endl;
+    std::cout << "Executing opcode: " << inst.opcode << std::endl;
     int32_t value = 0;
     if(inst.immediate)
         value = inst.operand;
