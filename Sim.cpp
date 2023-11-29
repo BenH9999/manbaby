@@ -77,8 +77,6 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
     switch (inst.opcode) {
         case 0b000:
             cont.CI = (value);
-            std::cout << cont.CI << std::endl;
-            printBits(store[cont.CI+1]);
             break;
         case 0b001:
             cont.CI += (value);
