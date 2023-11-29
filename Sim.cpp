@@ -3,16 +3,10 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#ifdef _WIN32
-    #include <windows.h> // Unsure if works.
-    typedef signed int int32_t;
-#else
-    #include <unistd.h>
-#endif
+#include <unistd.h>
 #define msleep(milliseconds) usleep(milliseconds*1000)
 
 const int32_t MAX_MEM = 268435455;
-int32_t mem_size = 32;
 
 bool halted = false;
 
@@ -29,8 +23,110 @@ struct instruction {
     bool immediate;
 };
 
-void fetchInstruction(control &controlInst, int32_t store[]) {
+struct optionsStruct
+{
+    std::string inputFile;
+    bool extendedInstructions;
+    bool extendedMemory;
+    bool extendedAddressing;
+    bool alwaysDisplay;
+    bool useDifferentMemorySize;
+    int32_t MemorySize;
+} options;
+
+
+bool isAllDigits(std::string str) {
+    for (char c : str)
+    {
+        if(!isdigit(c))
+            return false;
+    }
+    return true;
+}
+
+
+int errorMessage(const char* msg, int32_t number) {
+    std::cout << msg << number << std::endl;
+    return -1;
+}
+
+int processArg(int& index, int argc, char* argv[]) {
+    std::string arg = argv[index];
+    std::string nextArg = "";
+    if((argc - index - 1) >= 1)
+        nextArg = argv[index+1];
+    if(arg == "-e") {
+        if(!options.extendedInstructions) {
+            options.extendedInstructions = true;
+            return 0;
+        }
+    } else if (arg == "-m") {
+        if (!options.useDifferentMemorySize) {
+            index++;
+            options.useDifferentMemorySize = true;
+
+            if (nextArg.empty()) {
+                return errorMessage("Mem size not provided: ", 0);
+            } else {
+                if (!isAllDigits(nextArg)) {
+                    std::cout << "Mem size is not a number: " << nextArg << std::endl;
+                    return(-1);
+                }
+
+                options.MemorySize = std::stoi(nextArg);
+                if (options.MemorySize > MAX_MEM || options.MemorySize < 32) {
+                    std::cout << "Mem size must be between 32 and " << MAX_MEM << std::endl;
+                    return(-1);
+                }
+                return 0;
+            }
+        }
+    } else if (arg == "-dd") {
+        if(options.alwaysDisplay) {
+            options.alwaysDisplay = false;
+            return 0;
+        }
+    } else if(arg == "-a") {
+        if(!options.extendedAddressing) {
+            options.extendedAddressing = true;
+            return 0;
+        }
+    } else if (options.inputFile.empty()) {
+        options.inputFile = arg;
+        return 0;
+    } else {
+        std::cout << "Unexpected flag: " << arg << std::endl;
+        return -1;
+    }
+    std::cout << "Duplicate flag: " << arg << std::endl;
+    return -1;
+}
+
+int processArgs(int argc, char* argv[]) {
+    for (int i = 1; i < argc; i++)
+    {
+        if(processArg(i,argc,argv))
+            return -1;
+    }
+    if(options.inputFile.empty()){
+        std::cout << "No file name provived" << std::endl;
+        return -1;
+    }
+    if(!options.useDifferentMemorySize)
+        options.MemorySize = 32;
+    return 0;
+}
+
+bool isValidMemoryAddress(int32_t address) {
+    return address >= 0 && address < options.MemorySize;
+}
+
+
+int fetchInstruction(control &controlInst, int32_t store[]) {
+    if(!isValidMemoryAddress(controlInst.CI))
+        return errorMessage("[Fetch]: Invalid memory address: ",controlInst.CI);
     controlInst.PI = store[controlInst.CI];
+    return 0;
 }
 
 void printBits(int num) {
@@ -57,23 +153,32 @@ void displayLine(int32_t line) {
         if ((line >> i) & 1) {
             std::cout << "\033[47m ";
         } else {
-            std::cout << "\033[40m "; // Unicode character for a white square
+            std::cout << "\033[40m ";
         }
     }
     std::cout << "\033[0m" << std::endl;
 }
 
-void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
-    std::cout << "Cum: " << acc << "Num: " << numberOfLines << std::endl;
+int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
     std::cout << "\033[2J\033[H";
-    for (int32_t i = acc; i < numberOfLines; i++)
+    for (int32_t i = acc; i < numberOfLines; i++) {
+        if(!isValidMemoryAddress(i))
+            return errorMessage("[DIS]: Invalid memory address: ",i);
         displayLine(store[i]);
+    }
+    return 0;
 }
 
-void execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
-    int32_t value = store[inst.operand];
+int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
+    int32_t value = 0;
     if(inst.immediate)
         value = inst.operand;
+    else {
+        if(!isValidMemoryAddress(inst.operand)) {
+            return errorMessage("[Execute]: Invalid memory address: ",inst.operand);
+        }
+        value = store[inst.operand];
+    }
     switch (inst.opcode) {
         case 0b000:
             cont.CI = (value);
@@ -103,13 +208,14 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
             msleep(value);
             break;
         case 0b1001:
-            displayMemory(store,value,acc);
+            if(displayMemory(store,value,acc))
+                return errorMessage("Display mem failed: ",0);
             break;
         default:
-            std::cout << "Unknown Instruction: " << inst.opcode << std::endl;
-            halted=true;
+            return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
             break;
     }
+    return 0;
 }
 
 void readFile(int32_t *intPtr, std::string fileName) {
@@ -123,40 +229,39 @@ void readFile(int32_t *intPtr, std::string fileName) {
             intPtr[count] |= ((fileLine[i]=='1') << ((fileLine.length() - i) - 1));
         }
         count++;
-        if (count >= MAX_MEM) {
-            std::cout<<"Error, file to long";
+        if (count >= options.MemorySize) {
+            std::cout<<"Error, file to long"<<std::endl;
             exit(-1);
         }
     }
     file.close();
 }
 
-int main() {
-    /*int32_t store[32] = { 
-        0b00000000000000000000000000000000,
-        0b00000000000000000100000000000111,
-        0b00000000000000001000000000001000,
-        0b00000000000000000110000000001001,
-        0b00000000000000000100000000001001,
-        0b00000000000000000110000000001001,
-        0b00000000000000001110000000000000,
-        0b00000000000000000000010000000001,
-        0b00000000000000000000001001101101,
-        0b00000000000000000000000000000000,
-    }*/;
+int main(int argc, char *argv[]) {
+    if(processArgs(argc, argv))
+        return -1;
 
-    int32_t* store = new int32_t[MAX_MEM];
-    std::string fileName = "machineCodeOut.txt";
-    readFile(store, fileName);
+    std::cout << "inputFile " << options.inputFile << std::endl;
+    std::cout << "extendedInstructions " << options.extendedInstructions << std::endl;
+    std::cout << "extendedMemory " << options.extendedMemory << std::endl;
+    std::cout << "extendedAddressing " << options.extendedAddressing << std::endl;
+    std::cout << "alwaysDisplay " << options.alwaysDisplay << std::endl;
+    std::cout << "useDifferentMemorySize " << options.useDifferentMemorySize << std::endl;
+    std::cout << "MemorySize " << options.MemorySize << std::endl;
+
+    int32_t* store = new int32_t[options.MemorySize];
+    readFile(store, options.inputFile);
     control cont;
     accumulator cum;
     instruction instruct;
     cont.CI = 0;
     while (!halted) {
         cont.CI++;
-        fetchInstruction(cont, store);
+        if(fetchInstruction(cont, store))
+            return -1;
         instruct = decode(cont);
-        execute(instruct, cont, cum, store);
+        if(execute(instruct, cont, cum, store))
+            return -1;
     }
     
     //displayMemory(store,32,0);

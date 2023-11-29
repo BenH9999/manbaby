@@ -6,7 +6,7 @@ START:    LDN #1025   ; Copy variable to accumulator (negated)
           STO MYSUM   ; Store accumulator to variable - saves answer
 ; The next two instructions negate the stored answer
           LDN MYSUM   ; Copy variable to accumulator (negated)
-          STO MYSUM   ; Store accumulator to variable
+          STOLLL MYSUM   ; Store accumulator to variable
 END:      STP         ; Stop processor
 ; Variable declarations follow
 NUM01:    VAR 1025    ; Declare 32-bit variable
