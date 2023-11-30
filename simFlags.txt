@@ -1,3 +1,0 @@
--e extended instruction set
--dd dont constantly display memory (default on)
--m [size] set memory size (default to 32 lines)

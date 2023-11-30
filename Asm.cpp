@@ -2,22 +2,92 @@
 
 std::vector<std::string> labelNames;
 
-int main(){
-    processAll();
+struct optionsStruct
+{
+    std::string inputFile;
+    std::string outputFile;
+    bool extendedInstructions;
+    bool extendedMemory;
+    bool extendedAddressing;
+} options;
 
-    for (const std::string& line : asmFromFile) {
-        std::cout << line << std::endl;
-    }
-    std::cout << std::endl;
-    for(size_t i = 0; i < machineCode.size();i++){
-        for (int j = 0; j < 32; j++)
-        {
-            std::cout << (( machineCode[i] >> j ) & 0x1);
+int processArg(int& index, int argc, char* argv[]) {
+    std::string arg = argv[index];
+    std::string nextArg = "";
+    if((argc - index - 1) >= 1)
+        nextArg = argv[index+1];
+    if(arg == "-e") {
+        if(!options.extendedInstructions) {
+            options.extendedInstructions = true;
+        } else {
+            std::cout << "Duplicated flag: " << arg << std::endl;
+            return (-1);
         }
-        std::cout << std::endl;
+    } else if(arg == "-m") {
+        if(!options.extendedMemory) {
+            options.extendedMemory = true;
+        } else {
+            std::cout << "Duplicated flag: " << arg << std::endl;
+            return (-1);
+        }
+    } else if(arg == "-a") {
+        if(!options.extendedAddressing) {
+            options.extendedAddressing = true;
+        } else {
+            std::cout << "Duplicated flag: " << arg << std::endl;
+            return (-1);
+        }
+    } else if (arg == "-o") {
+        if (options.outputFile.empty()) {
+            index++;
+
+            if (nextArg.empty()) {
+                std::cout << "Output file not provided after '-o'" << std::endl;
+                return (-1);
+            } else {
+                options.outputFile = nextArg;
+            }
+        } else {
+            std::cout << "Duplicated flag: " << arg << std::endl;
+            return (-1);
+        }
+    } else if (options.inputFile.empty()) {
+        options.inputFile = arg;
+    } else {
+        std::cout << "Unexpected flag: " << arg << std::endl;
+        return (-1);
     }
-    
     return 0;
+}
+
+int processArgs(int argc, char* argv[]) {
+    for (int i = 1; i < argc; i++)
+    {
+        if(processArg(i,argc,argv))
+            return -1;
+    }
+    if(options.inputFile.empty()){
+        std::cout << "No file name provived" << std::endl;
+        return -1;
+    }
+    if(options.outputFile.empty())
+        options.outputFile = "a.out";
+    return 0;
+}
+
+
+int main(int argc, char* argv[]){
+    if(processArgs(argc, argv))
+        return -1;
+
+    const char* onOff[] = {"[off]", "[ON]"};
+
+    std::cout << "Input File: " << options.inputFile << std::endl;
+    std::cout << "Output File: " << options.outputFile << std::endl;
+    std::cout << "Extended Instructions: " << onOff[options.extendedInstructions] << std::endl;
+    std::cout << "Extended Memory: " << onOff[options.extendedMemory] << std::endl;
+    std::cout << "Extended Addressing: " << onOff[options.extendedAddressing] << std::endl;
+    return processAll();
 }
 
 int length_sort(const std::string a, const std::string b) {
@@ -39,7 +109,7 @@ void mapLabels() {
     std::sort(labelNames.begin(), labelNames.end(),length_sort);
 }
 
-void processAll(){
+int processAll(){
     //preprocessor
     readAsmFromFile();
     removeCommentsAndEmptyLines();
@@ -47,47 +117,95 @@ void processAll(){
     removeLabels();
 
     //Main Assembler
-    assemble();
+    if(assemble())
+        return -1;
     writeMachineCodeToFile();
+    return 0;
 }
 
-void assemble(){
+bool tryParseInt(const std::string& toParse, int& buffer) {
+    try {
+        long long longBuffer = std::stoll(toParse);
+        if(longBuffer > INT32_MAX || longBuffer < INT32_MIN) {
+            std::cout << "2147483647 < " << longBuffer << " OR -2147483648 > " << longBuffer << std::endl;
+            return false;
+        }
+        buffer = (int)longBuffer;
+        return true;
+    } catch(const std::exception& e) {
+        return false;
+    }
+    return true;
+}
+
+int assemble(){
     mapFunctionNumbers();
     for(std::string s : asmFromFile){
-        std::istringstream iss(s);
-        std::string instruction;
-        iss >> instruction;
-        int immediate = 0;
+        std::string instructionString;
+        std::string operandString;
+        int buffer = 0;
+        size_t splitPosition = s.find(' ');
 
-        if(instruction != "VAR"){
-            int operand, functionNo, machineCodeInt;
-            std::string operandString;
-
-            functionNo = functionNumbers[instruction];
-            iss >> operandString;
-            if(operandString[0] == '#') {
-                std::istringstream(operandString.substr(1)) >> operand;
-                immediate = 1;
-            } else {
-                std::istringstream(operandString) >> operand;
-            }
-            if(operand > 4095){
-                int first = (operand & 0b111111111111); 
-                int second = (operand >> 12) & 0x7FFF;
-                machineCodeInt = first | (functionNo << 12) | (second << 16) | (immediate << 31);
-            }   
-            else  {
-                machineCodeInt = operand | (functionNo << 12) | (immediate << 31);
-            }
-
-            machineCode.push_back(machineCodeInt);
+        if(splitPosition == std::string::npos) {
+            instructionString = s;
+            operandString = "0";
+        } else {
+            instructionString = s.substr(0,splitPosition);
+            operandString = s.substr(splitPosition+1, s.size()-splitPosition);
         }
-        else{
-            int varValue;
-            iss >> varValue;
-            machineCode.push_back(varValue);
+
+        if(instructionString == "VAR") {
+            if(!tryParseInt(operandString, buffer)) {
+                std::cout << "Failed to parse int: " << operandString << std::endl;
+                std::cout << "On line: [" << s << "]" << std::endl;
+                return -1;
+            }
+            machineCode.push_back(buffer);
+            continue;
         }
+
+        if(functionNumbers.find(instructionString) == functionNumbers.end()) {
+            std::cout << "Invalid instruction ["<<instructionString<<"]" << std::endl;
+            if(!options.extendedInstructions)
+                std::cout << "Try turning on extended instruction set with -e" << std::endl;
+            return -1;
+        }
+
+        int functionNumber = functionNumbers[instructionString];
+        int operand;
+        bool immediate = false;
+        if(operandString[0] == '#') {
+            if(!options.extendedAddressing) {
+                std::cout << "Extended addressing is not turned on, failed on line: " << s << std::endl;
+                return -1;
+            }
+            immediate = true;
+            operandString = operandString.substr(1,operandString.size()-1);
+        }
+
+        if(!tryParseInt(operandString, buffer)) {
+            std::cout << "Failed to parse as int: " << operandString << std::endl;
+            std::cout << "On line: [" << s << "]" << std::endl;
+            return -1;
+        }
+        operand = buffer;
+        int machineCodeInt = 0;
+
+        if(operand >= 32 && !immediate && !options.extendedMemory) {
+            std::cout << "Warning exectution will go out of bounds!" << std::endl;
+        }
+
+        if(operand >= 8192){
+            int first = (operand & 0b1111111111111); 
+            int second = (operand >> 13) & 0b11111111111111;
+            machineCodeInt = first | (functionNumber << 13) | (second << 17) | ((immediate&0x1) << 31);
+        } else {
+            machineCodeInt = operand | (functionNumber << 13) | ((immediate&0x1) << 31);
+        }
+
+    machineCode.push_back(machineCodeInt);
     }
+    return 0;
 }
 
 void mapFunctionNumbers(){
@@ -98,8 +216,16 @@ void mapFunctionNumbers(){
     functionNumbers["SUB"] = 4;
     functionNumbers["CMP"] = 6;
     functionNumbers["STP"] = 7;
+    if(!options.extendedInstructions)
+        return;
     functionNumbers["WAT"] = 8;
     functionNumbers["DIS"] = 9;
+    functionNumbers["LDP"] = 10;
+    functionNumbers["BSR"] = 11;
+    functionNumbers["BSL"] = 12;
+    functionNumbers["AND"] = 13;
+    functionNumbers["LOR"] = 14;
+    functionNumbers["GET"] = 15;
 }
 
 void trim(std::string &s) {
@@ -154,7 +280,7 @@ void removeCommentsAndEmptyLines() {
 }
 
 void writeMachineCodeToFile(){
-    std::ofstream file("machineCodeOut.txt");
+    std::ofstream file(options.outputFile);
 
     for(size_t i = 0; i < machineCode.size(); i++){
         for (int j = 0; j < 32; j++)
@@ -168,7 +294,7 @@ void writeMachineCodeToFile(){
 }
 
 void readAsmFromFile(){
-    std::string fileName = "programs/src/bad_apple.asm";
+    std::string fileName = options.inputFile;
     std::ifstream file(fileName);
     std::string buff;
 

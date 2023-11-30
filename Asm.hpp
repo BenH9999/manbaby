@@ -14,11 +14,11 @@ std::vector<std::string> modifiedLines;
 std::unordered_map<std::string, int> labelsFromAsm;
 std::vector<int> machineCode;
 
-void processAll();
+int processAll();
 void mapFunctionNumbers();
 void readAsmFromFile();
 void removeCommentsAndEmptyLines();
 void mapLabels();
 void removeLabels();
-void assemble();
+int assemble();
 void writeMachineCodeToFile();
