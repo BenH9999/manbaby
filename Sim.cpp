@@ -80,9 +80,9 @@ int processArg(int& index, int argc, char* argv[]) {
                 return 0;
             }
         }
-    } else if (arg == "-dd") {
-        if(options.alwaysDisplay) {
-            options.alwaysDisplay = false;
+    } else if (arg == "-d") {
+        if(!options.alwaysDisplay) {
+            options.alwaysDisplay = true;
             return 0;
         }
     } else if(arg == "-a") {
@@ -165,8 +165,7 @@ void displayLine(int32_t line) {
 }
 
 int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
-    //std::cout << "\033[2J\033[H";
-    //std::cout << "acc: " << acc << "NO: " << numberOfLines << std::endl;
+    std::cout << "\033[2J\033[H";
     for (int32_t i = acc; i < numberOfLines; i++) {
         if(!isValidMemoryAddress(i))
             return errorMessage("[DIS]: Invalid memory address: ",i);
@@ -291,7 +290,10 @@ int main(int argc, char *argv[]) {
         instruct = decode(cont.PI);
         if(execute(instruct, cont, cum, store))
             return -1;
+        if(options.alwaysDisplay) {
+            displayMemory(store,10,0);
+            msleep(500);
+        }
     }
-
     return 0;
 }
