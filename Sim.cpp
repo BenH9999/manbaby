@@ -165,7 +165,8 @@ void displayLine(int32_t line) {
 }
 
 int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
-    std::cout << "\033[2J\033[H";
+    //std::cout << "\033[2J\033[H";
+    //std::cout << "acc: " << acc << "NO: " << numberOfLines << std::endl;
     for (int32_t i = acc; i < numberOfLines; i++) {
         if(!isValidMemoryAddress(i))
             return errorMessage("[DIS]: Invalid memory address: ",i);
@@ -184,6 +185,11 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
         }
         value = store[inst.operand];
     }
+    if(inst.opcode >= 8 && !options.extendedInstructions) {
+        std::cout << "Extended instruction set is not turned on" << std::endl;
+        return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
+    }
+    //std::cout << "CI: " << cont.CI << "Acc: " << acc << std::endl;
     switch (inst.opcode) {
         case 0b000:
             cont.CI = (value);
@@ -209,18 +215,36 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
             halted = true;
             break;
         // Extened Instruction Set:
-        case 0b1000:
+        case 0b1000: //wait
             msleep(value);
             break;
-        case 0b1001:
+        case 0b1001: //display memory
             if(displayMemory(store,value,acc))
                 return errorMessage("Display mem failed: ",0);
             break;
+        case 0b1010: //Load positive
+            acc = value;
+            break;
+        case 0b1011: //bit shift right
+            acc = acc >> value;
+            break;
+        case 0b1100: //bit shift left
+            acc = acc << value;
+            break;
+        case 0b1101: //logical and
+            acc = acc & value;
+            break;
+        case 0b1110: //logical or
+            acc = acc | value;
+            break;
+        case 0b1111: //get 
+            acc = store[value + acc];
+            break;
         default:
-            std::cout << "CI: " << cont.CI << std::endl;
             return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
             break;
     }
+    
     return 0;
 }
 

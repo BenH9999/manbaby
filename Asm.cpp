@@ -184,7 +184,11 @@ int assemble(){
         int functionNumber = functionNumbers[instructionString];
         int operand;
         bool immediate = false;
-        if(operandString[0] == '#' && options.extendedAddressing) {
+        if(operandString[0] == '#') {
+            if(!options.extendedAddressing) {
+                std::cout << "Extended addressing is not turned on, failed on line: " << s << std::endl;
+                return -1;
+            }
             immediate = true;
             operandString = operandString.substr(1,operandString.size()-1);
         }
@@ -226,6 +230,12 @@ void mapFunctionNumbers(){
         return;
     functionNumbers["WAT"] = 8;
     functionNumbers["DIS"] = 9;
+    functionNumbers["LDP"] = 10;
+    functionNumbers["BSR"] = 11;
+    functionNumbers["BSL"] = 12;
+    functionNumbers["AND"] = 13;
+    functionNumbers["LOR"] = 14;
+    functionNumbers["GET"] = 15;
 }
 
 void trim(std::string &s) {

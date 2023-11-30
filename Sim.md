@@ -24,14 +24,14 @@
 
 ## Extensions:
 ### Simulator Functionality
-- [ ] Add options for:
+- [X] Add options for:
    - [X] Increased Memory.
    - [X] More instructions.
    - [X] Immediate addressing.
       - [X] Define how these addressing modes are decoded. (Last bit 1 if immediate)
-- [ ] Error handling:
-   - [ ] Invalid instructions
-   - [ ] Out-of-bounds memory access
+- [X] Error handling:
+   - [X] Invalid instructions
+   - [X] Out-of-bounds memory access
 
 ### Other
 - [X] Develop more assembly language programs
