@@ -11,6 +11,7 @@
 #endif
 #define msleep(milliseconds) usleep(milliseconds*1000)
 
+const int INVALID_INPUT_PARAMETER = -1;
 const int32_t MAX_MEM = 268435455;
 int32_t mem_size = 32;
 
@@ -29,19 +30,57 @@ struct instruction {
     bool immediate;
 };
 
-void fetchInstruction(control &controlInst, int32_t store[]) {
+int fetchInstruction(control &controlInst, int32_t store[]) {
+    //Check if a valid control instruction in control has been passed in
+    if (controlInst.CI < 0 || controlInst.CI > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid control CI input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
+
     controlInst.PI = store[controlInst.CI];
+    return 0;
 }
 
-void printBits(int num) {
+int printBits(int num) {
+    //Check if a valid number has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (num < -2147483648 || num > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid number input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    
+
     for (int i = 32 - 1; i >= 0; i--) {
         int bit = (num >> i) & 1;
         std::cout << bit;
     }
     std::cout << std::endl;
+
+    return 0;
 }
 
 instruction decode(control controlInst) {
+    //Check if a valid control instruction in control has been passed in
+    if (controlInst.CI < 0 || controlInst.CI > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid control CI input parameter" << std::endl;
+        //return;
+    }
+    //Check if a valid present instruction in control has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (controlInst.PI < -2147483648 || controlInst.PI > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid control PI input parameter" << std::endl;
+        //return;
+    }
+
     int first_twelve = controlInst.PI & 0b111111111111;
     int last_sixteen = (controlInst.PI >> 16) &0b0111111111111111;
     int address = first_twelve | (last_sixteen << 12);
@@ -63,14 +102,71 @@ void displayLine(int32_t line) {
     std::cout << "\033[0m" << std::endl;
 }
 
-void displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
+int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
+    //store array length can't be checked because when array is passed it becomes a pointer
+    //So instead of showing the size of the array it does the size of int32_t instead
+
+    //Check if a valid number of Lines has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (numberOfLines < -2147483648 || numberOfLines > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid Number of Lines input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if a valid accumulator has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (acc < -2147483648 || acc > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid accumulator input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
     std::cout << "Cum: " << acc << "Num: " << numberOfLines << std::endl;
     std::cout << "\033[2J\033[H";
     for (int32_t i = acc; i < numberOfLines; i++)
         displayLine(store[i]);
+
+    return 0;
 }
 
-void execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
+int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
+    //Check if a valid operand in intruction has been passed in
+    if (inst.operand < 0 || inst.operand > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cout << inst.operand << std::endl;
+        std::cerr << "Invalid intruction input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if a valid control instruction in control has been passed in
+    if (cont.CI < 0 || cont.CI > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid control CI input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if a valid present instruction in control has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (cont.PI < -2147483648 || cont.PI > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid control PI input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if a valid accumulator has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (acc < -2147483648 || acc > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid accumulator input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
+    //store array length can't be checked because when array is passed it becomes a pointer
+    //So instead of showing the size of the array it does the size of int32_t instead
+
     int32_t value = store[inst.operand];
     switch (inst.opcode) {
         case 0b000:
@@ -100,7 +196,7 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
             break;
         // Extened Instruction Set:
         case 0b1000:
-            msleep(inst.operand);
+            //msleep(inst.operand);
             break;
         case 0b1001:
             displayMemory(store,inst.operand,acc);
@@ -110,10 +206,34 @@ void execute(instruction inst, control &cont, accumulator &acc, int32_t store[])
             halted=true;
             break;
     }
+    return 0;
 }
 
-void readFile(int32_t *intPtr, std::string fileName) {
+int readFile(int32_t *intPtr, std::string fileName) {
+    //Check if the variable filename is empty
+    if (fileName.empty())
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid fileName input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if variable intPtr is a valid pointer
+    if (intPtr == NULL)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid pointer input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
     std::ifstream file(fileName);
+    //Check if the file exists
+    if (file.fail())
+    {
+        //Output error message and return out of the function
+        std::cerr << "File does not exist." << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
     std::string fileLine;
     int count = 0;
     while(getline(file, fileLine)){
@@ -129,6 +249,7 @@ void readFile(int32_t *intPtr, std::string fileName) {
         }
     }
     file.close();
+    return 0;
 }
 
 int main() {
@@ -147,7 +268,11 @@ int main() {
 
     int32_t* store = new int32_t[MAX_MEM];
     std::string fileName = "machineCodeOut.txt";
-    readFile(store, fileName);
+    if (readFile(store, fileName) == INVALID_INPUT_PARAMETER)
+    {
+        //Ends the program if an invalid input was used
+        return 0;
+    }
     control cont;
     accumulator cum;
     instruction instruct;
@@ -155,9 +280,19 @@ int main() {
     cont.CI = 25;
     while (!halted) {
         cont.CI++;
-        fetchInstruction(cont, store);
+        if (fetchInstruction(cont, store) == INVALID_INPUT_PARAMETER)
+        {
+            //Ends the program if an invalid input was used
+            return 0;
+        }
         instruct = decode(cont);
-        execute(instruct, cont, cum, store);
+        if (execute(instruct, cont, cum, store) == INVALID_INPUT_PARAMETER)
+        {
+            //Ends the program if an invalid input was used
+            return 0;
+        }
+        
+        
     }
     
     //displayMemory(store,32,0);
