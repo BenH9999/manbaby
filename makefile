@@ -1,7 +1,7 @@
 all: asm sim
 
 asm: Asm.cpp
-	g++ -o asm Asm.cpp -Wall
+	g++ -O3 -o asm Asm.cpp -Wall
 
 sim: Sim.cpp
-	g++ -o sim Sim.cpp -Wall
+	g++ -O3 -o sim Sim.cpp -Wall

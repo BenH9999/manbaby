@@ -273,6 +273,7 @@ void writeMachineCodeToFile(){
     }
 
     file.close();
+    std::cout << "Machine code written to " << options.outputFile << std::endl;
 }
 
 void readAsmFromFile(){
