@@ -27,7 +27,6 @@ struct optionsStruct
 {
     std::string inputFile;
     bool extendedInstructions;
-    bool extendedMemory;
     bool extendedAddressing;
     bool alwaysDisplay;
     bool useDifferentMemorySize;
@@ -139,7 +138,7 @@ void printBits(int num) {
 
 instruction decode(int32_t encodedInstruction) {
     int first_thirteen = encodedInstruction & 0b1111111111111;
-    int last_fourteen = (encodedInstruction >> 16) &0b11111111111111;
+    int last_fourteen = (encodedInstruction >> 17) &0b11111111111111;
     int address = first_thirteen | (last_fourteen << 13);
     return instruction {
         .operand = address,
@@ -218,6 +217,7 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
                 return errorMessage("Display mem failed: ",0);
             break;
         default:
+            std::cout << "CI: " << cont.CI << std::endl;
             return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
             break;
     }
@@ -249,7 +249,6 @@ int main(int argc, char *argv[]) {
 
     std::cout << "inputFile: " << options.inputFile << std::endl;
     std::cout << "extendedInstructions: " << options.extendedInstructions << std::endl;
-    std::cout << "extendedMemory: " << options.extendedMemory << std::endl;
     std::cout << "extendedAddressing: " << options.extendedAddressing << std::endl;
     std::cout << "alwaysDisplay: " << options.alwaysDisplay << std::endl;
     std::cout << "useDifferentMemorySize: " << options.useDifferentMemorySize << std::endl;

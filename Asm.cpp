@@ -135,7 +135,13 @@ int processAll(){
 
 bool tryParseInt(const std::string& toParse, int& buffer) {
     try {
-        buffer = std::stoi(toParse);
+        long long longBuffer = std::stoll(toParse);
+        if(longBuffer > INT32_MAX || longBuffer < INT32_MIN) {
+            std::cout << "2147483647 < " << longBuffer << " OR -2147483648 > " << longBuffer << std::endl;
+            return false;
+        }
+        buffer = (int)longBuffer;
+        return true;
     } catch(const std::exception& e) {
         return false;
     }
@@ -161,9 +167,9 @@ int assemble(){
         if(instructionString == "VAR") {
             if(!tryParseInt(operandString, buffer)) {
                 std::cout << "Failed to parse int: " << operandString << std::endl;
+                std::cout << "On line: [" << s << "]" << std::endl;
                 return -1;
             }
-            std::cout << buffer << std::endl;
             machineCode.push_back(buffer);
             continue;
         }
@@ -180,11 +186,12 @@ int assemble(){
         bool immediate = false;
         if(operandString[0] == '#' && options.extendedAddressing) {
             immediate = true;
-            operandString = operandString.substr(0,operandString.size()-1);
+            operandString = operandString.substr(1,operandString.size()-1);
         }
 
         if(!tryParseInt(operandString, buffer)) {
             std::cout << "Failed to parse int: " << operandString << std::endl;
+            std::cout << "On line: [" << s << "]" << std::endl;
             return -1;
         }
         operand = buffer;
@@ -196,10 +203,10 @@ int assemble(){
 
         if(operand >= 8192){
             int first = (operand & 0b1111111111111); 
-            int second = (operand >> 13) & 16383;
-            machineCodeInt = first | (functionNumber << 13) | (second << 16) | (immediate << 31);
+            int second = (operand >> 13) & 0b11111111111111;
+            machineCodeInt = first | (functionNumber << 13) | (second << 17) | ((immediate&0x1) << 31);
         } else {
-            machineCodeInt = operand | (functionNumber << 13) | (immediate << 31);
+            machineCodeInt = operand | (functionNumber << 13) | ((immediate&0x1) << 31);
         }
 
     machineCode.push_back(machineCodeInt);
