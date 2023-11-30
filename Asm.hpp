@@ -5,14 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
-#include <regex>
 #include <bitset>
-
-std::unordered_map<std::string, int> functionNumbers;
-std::vector<std::string> asmFromFile;
-std::vector<std::string> modifiedLines;
-std::unordered_map<std::string, int> symbolTable;
-std::vector<int> machineCode;
 
 int processAll();
 void mapFunctionNumbers();

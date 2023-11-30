@@ -34,6 +34,18 @@ struct optionsStruct
     int32_t MemorySize;
 } options;
 
+void printUsage() {
+    std::cout << "Usage: ./sim [options] filename" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  -e  Enable extended instruction set" << std::endl;
+    std::cout << "  -d  Display the ui every cycle" << std::endl;
+    std::cout << "  -a  Enable extended addressing" << std::endl;
+    std::cout << "  -m  <size> Set a different memory size (must provide size with -m)" << std::endl;
+    std::cout << "Example:" << std::endl;
+    std::cout << "  ./sim -e -m 64 -d -a filename" << std::endl;
+}
+
+
 bool isAllDigits(std::string str) {
     for (char c : str)
     {
@@ -309,8 +321,10 @@ int readFile(int32_t *intPtr, std::string fileName) {
 }
 
 int main(int argc, char *argv[]) {
-    if(processArgs(argc, argv))
+    if(processArgs(argc, argv)) {
+        printUsage();
         return -1;
+    }
 
     std::cout << "inputFile: " << options.inputFile << std::endl;
     std::cout << "extendedInstructions: " << options.extendedInstructions << std::endl;
@@ -337,6 +351,13 @@ int main(int argc, char *argv[]) {
             return -1;
         if(options.alwaysDisplay) {
             displayMemory(store,32,0);
+            std::cout << "CI:" << std::endl;
+            displayLine(cont.CI);
+            std::cout << "PI:" << std::endl;
+            displayLine(cont.PI);
+            std::cout << "Accumulator: " << std::endl;
+            displayLine(acc);
+            std::cout << "STOP [" << (halted? "\033[47m" : "\033[40m") << " \033[0m]" << std::endl;
             msleep(500);
         }
     }

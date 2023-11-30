@@ -1,6 +1,11 @@
 #include "Asm.hpp"
 
 std::vector<std::string> labelNames;
+std::unordered_map<std::string, int> functionNumbers;
+std::vector<std::string> asmFromFile;
+std::vector<std::string> modifiedLines;
+std::unordered_map<std::string, int> symbolTable;
+std::vector<int> machineCode;
 
 struct optionsStruct
 {
@@ -10,6 +15,17 @@ struct optionsStruct
     bool extendedMemory;
     bool extendedAddressing;
 } options;
+
+void printUsage() {
+    std::cout << "Usage: ./asm [options] filename" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  -e  Enable extended instructions" << std::endl;
+    std::cout << "  -m  Enable extended memory" << std::endl;
+    std::cout << "  -a  Enable extended addressing" << std::endl;
+    std::cout << "  -o <output> Specify output file name" << std::endl;
+    std::cout << "Example:" << std::endl;
+    std::cout << "  ./asm -e -m -a -o output.bin input.asm" << std::endl;
+}
 
 int processArg(int& index, int argc, char* argv[]) {
     std::string arg = argv[index];
@@ -61,11 +77,11 @@ int processArgs(int argc, char* argv[]) {
     return 0;
 }
 
-
 int main(int argc, char* argv[]){
-    if(processArgs(argc, argv))
+    if(processArgs(argc, argv)) {
+        printUsage();
         return -1;
-
+    }
     const char* onOff[] = {"[off]", "[ON]"};
 
     std::cout << "Input File: " << options.inputFile << std::endl;
