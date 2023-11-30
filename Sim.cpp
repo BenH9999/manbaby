@@ -291,7 +291,7 @@ int main(int argc, char *argv[]) {
         if(execute(instruct, cont, cum, store))
             return -1;
         if(options.alwaysDisplay) {
-            displayMemory(store,10,0);
+            displayMemory(store,32,0);
             msleep(500);
         }
     }
