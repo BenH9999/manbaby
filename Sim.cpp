@@ -137,15 +137,21 @@ void printBits(int num) {
     std::cout << std::endl;
 }
 
-instruction decode(control controlInst) {
-    int first_twelve = controlInst.PI & 0b111111111111;
-    int last_sixteen = (controlInst.PI >> 16) &0b0111111111111111;
-    int address = first_twelve | (last_sixteen << 12);
+instruction decode(int32_t encodedInstruction) {
+    int first_thirteen = encodedInstruction & 0b1111111111111;
+    int last_fourteen = (encodedInstruction >> 16) &0b11111111111111;
+    int address = first_thirteen | (last_fourteen << 13);
     return instruction {
         .operand = address,
-        .opcode = (controlInst.PI >> 12) & 0b1111,
-        .immediate = !!(controlInst.PI & (1 << 31))
+        .opcode = (encodedInstruction >> 13) & 0b1111,
+        .immediate = !!(encodedInstruction & (1 << 31))
     };
+}
+
+void printInstruction(instruction i) {
+    std::cout << "Operand: " << i.operand << std::endl;
+    std::cout << "Opcode: " << i.opcode << std::endl;
+    std::cout << "Immediate: " << i.immediate << std::endl;
 }
 
 void displayLine(int32_t line) {
@@ -169,11 +175,7 @@ int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
     return 0;
 }
 
-
-//TODO: fix this it is broken!
 int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) {
-    std::cout << "Addr: " << cont.CI << std::endl;
-    std::cout << "Executing opcode: " << inst.opcode << std::endl;
     int32_t value = 0;
     if(inst.immediate)
         value = inst.operand;
@@ -245,13 +247,13 @@ int main(int argc, char *argv[]) {
     if(processArgs(argc, argv))
         return -1;
 
-    std::cout << "inputFile " << options.inputFile << std::endl;
-    std::cout << "extendedInstructions " << options.extendedInstructions << std::endl;
-    std::cout << "extendedMemory " << options.extendedMemory << std::endl;
-    std::cout << "extendedAddressing " << options.extendedAddressing << std::endl;
-    std::cout << "alwaysDisplay " << options.alwaysDisplay << std::endl;
-    std::cout << "useDifferentMemorySize " << options.useDifferentMemorySize << std::endl;
-    std::cout << "MemorySize " << options.MemorySize << std::endl;
+    std::cout << "inputFile: " << options.inputFile << std::endl;
+    std::cout << "extendedInstructions: " << options.extendedInstructions << std::endl;
+    std::cout << "extendedMemory: " << options.extendedMemory << std::endl;
+    std::cout << "extendedAddressing: " << options.extendedAddressing << std::endl;
+    std::cout << "alwaysDisplay: " << options.alwaysDisplay << std::endl;
+    std::cout << "useDifferentMemorySize: " << options.useDifferentMemorySize << std::endl;
+    std::cout << "MemorySize: " << options.MemorySize << std::endl;
 
     int32_t* store = new int32_t[options.MemorySize];
     readFile(store, options.inputFile);
@@ -263,11 +265,10 @@ int main(int argc, char *argv[]) {
         cont.CI++;
         if(fetchInstruction(cont, store))
             return -1;
-        instruct = decode(cont);
+        instruct = decode(cont.PI);
         if(execute(instruct, cont, cum, store))
             return -1;
     }
-    
-    //displayMemory(store,32,0);
+
     return 0;
 }

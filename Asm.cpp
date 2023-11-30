@@ -133,49 +133,76 @@ int processAll(){
     return 0;
 }
 
+bool tryParseInt(const std::string& toParse, int& buffer) {
+    try {
+        buffer = std::stoi(toParse);
+    } catch(const std::exception& e) {
+        return false;
+    }
+    return true;
+}
+
 int assemble(){
     mapFunctionNumbers();
     for(std::string s : asmFromFile){
-        std::istringstream iss(s);
-        std::string instruction;
-        iss >> instruction;
-        int immediate = 0;
+        std::string instructionString;
+        std::string operandString;
+        int buffer = 0;
+        size_t splitPosition = s.find(' ');
 
-        if(instruction != "VAR"){
-            int operand, functionNo, machineCodeInt;
-            std::string operandString;
-            if(functionNumbers.find(instruction) == functionNumbers.end()) {
-                std::cout << "Instruction [" << instruction << "] is invalid!" << std::endl;
-                if(!options.extendedInstructions)
-                    std::cout << "Try turning on extended instruction set with flag [-e]" << std::endl;
+        if(splitPosition == std::string::npos) {
+            instructionString = s;
+            operandString = "0";
+        } else {
+            instructionString = s.substr(0,splitPosition);
+            operandString = s.substr(splitPosition+1, s.size()-splitPosition);
+        }
+
+        if(instructionString == "VAR") {
+            if(!tryParseInt(operandString, buffer)) {
+                std::cout << "Failed to parse int: " << operandString << std::endl;
                 return -1;
             }
-            functionNo = functionNumbers[instruction];
-            iss >> operandString;
-            //TODO: support turning off immediate adressing!
-            //TODO: handle non-numbers here
-            if(operandString[0] == '#') {
-                std::istringstream(operandString.substr(1)) >> operand;
-                immediate = 1;
-            } else {
-                std::istringstream(operandString) >> operand;
-            }
-            if(operand > 4095){
-                int first = (operand & 0b111111111111); 
-                int second = (operand >> 12) & 0x7FFF;
-                machineCodeInt = first | (functionNo << 12) | (second << 16) | (immediate << 31);
-            }   
-            else  {
-                machineCodeInt = operand | (functionNo << 12) | (immediate << 31);
-            }
+            std::cout << buffer << std::endl;
+            machineCode.push_back(buffer);
+            continue;
+        }
 
-            machineCode.push_back(machineCodeInt);
+        if(functionNumbers.find(instructionString) == functionNumbers.end()) {
+            std::cout << "Invalid instruction ["<<instructionString<<"]" << std::endl;
+            if(!options.extendedInstructions)
+                std::cout << "Try turning on extended instruction set with -e" << std::endl;
+            return -1;
         }
-        else{
-            int varValue;
-            iss >> varValue;
-            machineCode.push_back(varValue);
+
+        int functionNumber = functionNumbers[instructionString];
+        int operand;
+        bool immediate = false;
+        if(operandString[0] == '#' && options.extendedAddressing) {
+            immediate = true;
+            operandString = operandString.substr(0,operandString.size()-1);
         }
+
+        if(!tryParseInt(operandString, buffer)) {
+            std::cout << "Failed to parse int: " << operandString << std::endl;
+            return -1;
+        }
+        operand = buffer;
+        int machineCodeInt = 0;
+
+        if(operand >= 32 && !immediate && !options.extendedMemory) {
+            std::cout << "Warning exectution will go out of bounds!" << std::endl;
+        }
+
+        if(operand >= 8192){
+            int first = (operand & 0b1111111111111); 
+            int second = (operand >> 13) & 16383;
+            machineCodeInt = first | (functionNumber << 13) | (second << 16) | (immediate << 31);
+        } else {
+            machineCodeInt = operand | (functionNumber << 13) | (immediate << 31);
+        }
+
+    machineCode.push_back(machineCodeInt);
     }
     return 0;
 }
