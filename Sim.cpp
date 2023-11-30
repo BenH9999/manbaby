@@ -7,7 +7,7 @@
 #define msleep(milliseconds) usleep(milliseconds*1000)
 
 const int INVALID_INPUT_PARAMETER = -1;
-const int32_t MAX_MEM = 268435455;
+const int32_t MAX_MEM = 134217727;
 
 bool halted = false;
 
@@ -44,7 +44,7 @@ bool isAllDigits(std::string str) {
 }
 
 int errorMessage(const char* msg, int32_t number) {
-    std::cout << msg << number << std::endl;
+    std::cerr << msg << number << std::endl;
     return -1;
 }
 
@@ -67,14 +67,13 @@ int processArg(int& index, int argc, char* argv[]) {
                 return errorMessage("Mem size not provided: ", 0);
             } else {
                 if (!isAllDigits(nextArg)) {
-                    std::cout << "Mem size is not a number: " << nextArg << std::endl;
-                    return(-1);
+                    std::cerr << "Mem size is not a number: " << nextArg << std::endl;
+                    return -1;
                 }
 
                 options.MemorySize = std::stoi(nextArg);
                 if (options.MemorySize > MAX_MEM || options.MemorySize < 32) {
-                    std::cout << "Mem size must be between 32 and " << MAX_MEM << std::endl;
-                    return(-1);
+                    return errorMessage("Mem size must be between 32 and ",MAX_MEM);
                 }
                 return 0;
             }
@@ -93,10 +92,10 @@ int processArg(int& index, int argc, char* argv[]) {
         options.inputFile = arg;
         return 0;
     } else {
-        std::cout << "Unexpected flag: " << arg << std::endl;
+        std::cerr << "Unexpected flag: " << arg << std::endl;
         return -1;
     }
-    std::cout << "Duplicate flag: " << arg << std::endl;
+    std::cerr << "Duplicate flag: " << arg << std::endl;
     return -1;
 }
 
@@ -107,7 +106,7 @@ int processArgs(int argc, char* argv[]) {
             return -1;
     }
     if(options.inputFile.empty()){
-        std::cout << "No file name provived" << std::endl;
+        std::cerr << "No file name provived" << std::endl;
         return -1;
     }
     if(!options.useDifferentMemorySize)
@@ -180,19 +179,10 @@ int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
     //So instead of showing the size of the array it does the size of int32_t instead
 
     //Check if a valid number of Lines has been passed in
-    //2147483647 is the biggest number a 32 bit integer can hold
-    if (numberOfLines < -2147483648 || numberOfLines > MAX_MEM)
+    if (numberOfLines > MAX_MEM)
     {
         //Output error message and return out of the function
         std::cerr << "Invalid Number of Lines input parameter" << std::endl;
-        return INVALID_INPUT_PARAMETER;
-    }
-    //Check if a valid accumulator has been passed in
-    //2147483647 is the biggest number a 32 bit integer can hold
-    if (acc < -2147483648 || acc > 2147483647)
-    {
-        //Output error message and return out of the function
-        std::cerr << "Invalid accumulator input parameter" << std::endl;
         return INVALID_INPUT_PARAMETER;
     }
     std::cout << "\033[2J\033[H";
@@ -215,7 +205,7 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
         value = store[inst.operand];
     }
     if(inst.opcode >= 8 && !options.extendedInstructions) {
-        std::cout << "Extended instruction set is not turned on" << std::endl;
+        std::cerr << "Extended instruction set is not turned on" << std::endl;
         return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
     }
     switch (inst.opcode) {
@@ -310,8 +300,8 @@ int readFile(int32_t *intPtr, std::string fileName) {
         }
         count++;
         if (count >= options.MemorySize) {
-            std::cout<<"Error, file to long"<<std::endl;
-            exit(-1);
+            std::cerr<<"Error, file to long"<<std::endl;
+            return -2;
         }
     }
     file.close();
@@ -330,11 +320,9 @@ int main(int argc, char *argv[]) {
     std::cout << "MemorySize: " << options.MemorySize << std::endl;
 
     int32_t* store = new int32_t[options.MemorySize];
-    std::string fileName = "machineCodeOut.txt";
-    if (readFile(store, fileName) == INVALID_INPUT_PARAMETER)
+    if (readFile(store, options.inputFile))
     {
-        //Ends the program if an invalid input was used
-        return 0;
+        return INVALID_INPUT_PARAMETER;
     }
     control cont;
     accumulator acc;

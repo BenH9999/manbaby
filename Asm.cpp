@@ -16,48 +16,34 @@ int processArg(int& index, int argc, char* argv[]) {
     std::string nextArg = "";
     if((argc - index - 1) >= 1)
         nextArg = argv[index+1];
-    if(arg == "-e") {
-        if(!options.extendedInstructions) {
-            options.extendedInstructions = true;
-        } else {
-            std::cout << "Duplicated flag: " << arg << std::endl;
-            return (-1);
-        }
-    } else if(arg == "-m") {
-        if(!options.extendedMemory) {
-            options.extendedMemory = true;
-        } else {
-            std::cout << "Duplicated flag: " << arg << std::endl;
-            return (-1);
-        }
-    } else if(arg == "-a") {
-        if(!options.extendedAddressing) {
-            options.extendedAddressing = true;
-        } else {
-            std::cout << "Duplicated flag: " << arg << std::endl;
-            return (-1);
-        }
-    } else if (arg == "-o") {
-        if (options.outputFile.empty()) {
-            index++;
 
-            if (nextArg.empty()) {
-                std::cout << "Output file not provided after '-o'" << std::endl;
-                return (-1);
-            } else {
-                options.outputFile = nextArg;
-            }
+    if(arg == "-e" && !options.extendedInstructions) {
+        options.extendedInstructions = true;
+        return 0;
+    } else if(arg == "-m" && !options.extendedMemory) {
+        options.extendedMemory = true;
+        return 0;
+    } else if(arg == "-a" && !options.extendedAddressing) {
+        options.extendedAddressing = true;
+        return 0;
+    } else if (arg == "-o" && options.outputFile.empty()) {
+        index++;
+        if (nextArg.empty()) {
+            std::cout << "Output file not provided after '-o'" << std::endl;
+            return -1;
         } else {
-            std::cout << "Duplicated flag: " << arg << std::endl;
-            return (-1);
+            options.outputFile = nextArg;
         }
+        return 0;
     } else if (options.inputFile.empty()) {
         options.inputFile = arg;
+        return 0;
     } else {
-        std::cout << "Unexpected flag: " << arg << std::endl;
-        return (-1);
+        std::cerr << "Unexpected flag: " << arg << std::endl;
+        return -1;
     }
-    return 0;
+    std::cerr << "Duplicate flag: " << arg << std::endl; 
+    return -1;
 }
 
 int processArgs(int argc, char* argv[]) {
@@ -127,7 +113,7 @@ bool tryParseInt(const std::string& toParse, int& buffer) {
     try {
         long long longBuffer = std::stoll(toParse);
         if(longBuffer > INT32_MAX || longBuffer < INT32_MIN) {
-            std::cout << "2147483647 < " << longBuffer << " OR -2147483648 > " << longBuffer << std::endl;
+            std::cerr << "number " << longBuffer << " exceeds 32bit limit!" << std::endl;
             return false;
         }
         buffer = (int)longBuffer;
@@ -156,8 +142,8 @@ int assemble(){
 
         if(instructionString == "VAR") {
             if(!tryParseInt(operandString, buffer)) {
-                std::cout << "Failed to parse int: " << operandString << std::endl;
-                std::cout << "On line: [" << s << "]" << std::endl;
+                std::cerr << "Failed to parse int: " << operandString << std::endl;
+                std::cerr << "On line: [" << s << "]" << std::endl;
                 return -1;
             }
             machineCode.push_back(buffer);
@@ -167,7 +153,7 @@ int assemble(){
         if(functionNumbers.find(instructionString) == functionNumbers.end()) {
             std::cout << "Invalid instruction ["<<instructionString<<"]" << std::endl;
             if(!options.extendedInstructions)
-                std::cout << "Try turning on extended instruction set with -e" << std::endl;
+                std::cerr << "Try turning on extended instruction set with -e" << std::endl;
             return -1;
         }
 
@@ -176,7 +162,7 @@ int assemble(){
         bool immediate = false;
         if(operandString[0] == '#') {
             if(!options.extendedAddressing) {
-                std::cout << "Extended addressing is not turned on, failed on line: " << s << std::endl;
+                std::cerr << "Extended addressing is not turned on, failed on line: " << s << std::endl;
                 return -1;
             }
             immediate = true;
@@ -184,15 +170,15 @@ int assemble(){
         }
 
         if(!tryParseInt(operandString, buffer)) {
-            std::cout << "Failed to parse as int: " << operandString << std::endl;
-            std::cout << "On line: [" << s << "]" << std::endl;
+            std::cerr << "Failed to parse as int: " << operandString << std::endl;
+            std::cerr << "On line: [" << s << "]" << std::endl;
             return -1;
         }
         operand = buffer;
         int machineCodeInt = 0;
 
         if(operand >= 32 && !immediate && !options.extendedMemory) {
-            std::cout << "Warning exectution will go out of bounds!" << std::endl;
+            std::cerr << "Warning exectution will go out of bounds!" << std::endl;
         }
 
         if(operand >= 8192){
@@ -231,11 +217,7 @@ void mapFunctionNumbers(){
 void trim(std::string &s) {
     //Check if the line variable is empty
     if (s.empty())
-    {
-        //Output error message and return out of the function
-        std::cerr << "Invalid string input parameter" << std::endl;
-        //Don't know how to end the program from here
-    }
+        return;
     const char* ws = " \t\r\n";
 
     size_t start = s.find_first_not_of(ws);
