@@ -33,7 +33,6 @@ struct optionsStruct
     int32_t MemorySize;
 } options;
 
-
 bool isAllDigits(std::string str) {
     for (char c : str)
     {
@@ -42,7 +41,6 @@ bool isAllDigits(std::string str) {
     }
     return true;
 }
-
 
 int errorMessage(const char* msg, int32_t number) {
     std::cout << msg << number << std::endl;
@@ -280,7 +278,7 @@ int main(int argc, char *argv[]) {
     int32_t* store = new int32_t[options.MemorySize];
     readFile(store, options.inputFile);
     control cont;
-    accumulator cum;
+    accumulator acc;
     instruction instruct;
     cont.CI = 0;
     while (!halted) {
@@ -288,7 +286,7 @@ int main(int argc, char *argv[]) {
         if(fetchInstruction(cont, store))
             return -1;
         instruct = decode(cont.PI);
-        if(execute(instruct, cont, cum, store))
+        if(execute(instruct, cont, acc, store))
             return -1;
         if(options.alwaysDisplay) {
             displayMemory(store,32,0);

@@ -11,16 +11,6 @@ struct optionsStruct
     bool extendedAddressing;
 } options;
 
-
-bool isAllDigits(std::string str) {
-    for (char c : str)
-    {
-        if(!isdigit(c))
-            return false;
-    }
-    return true;
-}
-
 int processArg(int& index, int argc, char* argv[]) {
     std::string arg = argv[index];
     std::string nextArg = "";
@@ -194,7 +184,7 @@ int assemble(){
         }
 
         if(!tryParseInt(operandString, buffer)) {
-            std::cout << "Failed to parse int: " << operandString << std::endl;
+            std::cout << "Failed to parse as int: " << operandString << std::endl;
             std::cout << "On line: [" << s << "]" << std::endl;
             return -1;
         }

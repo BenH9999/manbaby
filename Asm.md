@@ -30,8 +30,7 @@ Note: The machine code should be little endian (e.g. 1000000 would be 1 not 128)
    - [X] Define how these addressing modes are encoded. (Last bit 1 if immediate)
 
 - [ ] Error detection:
-   - [ ] Invalid instructions. 
+   - [X] Invalid instructions. 
    - [ ] Syntax errors.
-   - [ ] Undeclared variables/labels.
 
 - [ ] Create user documentation to explain how to use the assembler, its features, and the extensions.
