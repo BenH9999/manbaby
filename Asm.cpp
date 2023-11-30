@@ -229,6 +229,13 @@ void mapFunctionNumbers(){
 }
 
 void trim(std::string &s) {
+    //Check if the line variable is empty
+    if (s.empty())
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid string input parameter" << std::endl;
+        //Don't know how to end the program from here
+    }
     const char* ws = " \t\r\n";
 
     size_t start = s.find_first_not_of(ws);

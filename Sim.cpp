@@ -6,6 +6,7 @@
 #include <unistd.h>
 #define msleep(milliseconds) usleep(milliseconds*1000)
 
+const int INVALID_INPUT_PARAMETER = -1;
 const int32_t MAX_MEM = 268435455;
 
 bool halted = false;
@@ -126,12 +127,24 @@ int fetchInstruction(control &controlInst, int32_t store[]) {
     return 0;
 }
 
-void printBits(int num) {
+int printBits(int num) {
+    //Check if a valid number has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (num < -2147483648 || num > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid number input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    
+
     for (int i = 32 - 1; i >= 0; i--) {
         int bit = (num >> i) & 1;
         std::cout << bit;
     }
     std::cout << std::endl;
+
+    return 0;
 }
 
 instruction decode(int32_t encodedInstruction) {
@@ -163,6 +176,25 @@ void displayLine(int32_t line) {
 }
 
 int displayMemory(int32_t store[], int32_t numberOfLines, accumulator acc) {
+    //store array length can't be checked because when array is passed it becomes a pointer
+    //So instead of showing the size of the array it does the size of int32_t instead
+
+    //Check if a valid number of Lines has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (numberOfLines < -2147483648 || numberOfLines > MAX_MEM)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid Number of Lines input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if a valid accumulator has been passed in
+    //2147483647 is the biggest number a 32 bit integer can hold
+    if (acc < -2147483648 || acc > 2147483647)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid accumulator input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
     std::cout << "\033[2J\033[H";
     for (int32_t i = acc; i < numberOfLines; i++) {
         if(!isValidMemoryAddress(i))
@@ -186,7 +218,6 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
         std::cout << "Extended instruction set is not turned on" << std::endl;
         return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
     }
-    //std::cout << "CI: " << cont.CI << "Acc: " << acc << std::endl;
     switch (inst.opcode) {
         case 0b000:
             cont.CI = (value);
@@ -241,12 +272,34 @@ int execute(instruction inst, control &cont, accumulator &acc, int32_t store[]) 
             return errorMessage("[Execute]: Unknown Instruction: ",inst.opcode);
             break;
     }
-    
     return 0;
 }
 
-void readFile(int32_t *intPtr, std::string fileName) {
+int readFile(int32_t *intPtr, std::string fileName) {
+    //Check if the variable filename is empty
+    if (fileName.empty())
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid fileName input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+    //Check if variable intPtr is a valid pointer
+    if (intPtr == NULL)
+    {
+        //Output error message and return out of the function
+        std::cerr << "Invalid pointer input parameter" << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
     std::ifstream file(fileName);
+    //Check if the file exists
+    if (file.fail())
+    {
+        //Output error message and return out of the function
+        std::cerr << "File does not exist." << std::endl;
+        return INVALID_INPUT_PARAMETER;
+    }
+
     std::string fileLine;
     int count = 0;
     while(getline(file, fileLine)){
@@ -262,6 +315,7 @@ void readFile(int32_t *intPtr, std::string fileName) {
         }
     }
     file.close();
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -276,7 +330,12 @@ int main(int argc, char *argv[]) {
     std::cout << "MemorySize: " << options.MemorySize << std::endl;
 
     int32_t* store = new int32_t[options.MemorySize];
-    readFile(store, options.inputFile);
+    std::string fileName = "machineCodeOut.txt";
+    if (readFile(store, fileName) == INVALID_INPUT_PARAMETER)
+    {
+        //Ends the program if an invalid input was used
+        return 0;
+    }
     control cont;
     accumulator acc;
     instruction instruct;
