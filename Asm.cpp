@@ -86,7 +86,7 @@ void mapLabels() {
         size_t pos = s.find(':');
         if(pos != std::string::npos){
             std::string label = s.substr(0,pos);
-            labelsFromAsm[label] = address;
+            symbolTable[label] = address;
             labelNames.push_back(label) ;
             s = s.substr(pos+1);
         }
@@ -237,7 +237,7 @@ void removeLabels() {
             size_t location = line.find(label);
             if(location == std::string::npos)
                 continue;
-            line.replace(location, label.length(), std::to_string(labelsFromAsm[label]));
+            line.replace(location, label.length(), std::to_string(symbolTable[label]));
         }
         trim(line);
     }   
