@@ -1,5 +1,6 @@
 #include "Asm.hpp"
 
+// Global variables and data structures
 std::vector<std::string> labelNames;
 std::unordered_map<std::string, int> functionNumbers;
 std::vector<std::string> asmFromFile;
@@ -7,6 +8,7 @@ std::vector<std::string> modifiedLines;
 std::unordered_map<std::string, int> symbolTable;
 std::vector<int> machineCode;
 
+// Structure to hold command-line options
 struct optionsStruct
 {
     std::string inputFile;
@@ -16,6 +18,7 @@ struct optionsStruct
     bool extendedAddressing;
 } options;
 
+// Function to print usage information
 void printUsage() {
     std::cout << "Usage: ./asm [options] filename" << std::endl;
     std::cout << "Options:" << std::endl;
@@ -27,6 +30,7 @@ void printUsage() {
     std::cout << "  ./asm -e -m -a -o output.bin input.asm" << std::endl;
 }
 
+// Function to process a single command-line argument
 int processArg(int& index, int argc, char* argv[]) {
     std::string arg = argv[index];
     std::string nextArg = "";
@@ -62,6 +66,7 @@ int processArg(int& index, int argc, char* argv[]) {
     return -1;
 }
 
+// Function to process all command-line arguments
 int processArgs(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++)
     {
@@ -69,7 +74,7 @@ int processArgs(int argc, char* argv[]) {
             return -1;
     }
     if(options.inputFile.empty()){
-        std::cout << "No file name provived" << std::endl;
+        std::cout << "No file name provided" << std::endl;
         return -1;
     }
     if(options.outputFile.empty())
@@ -77,6 +82,7 @@ int processArgs(int argc, char* argv[]) {
     return 0;
 }
 
+// Main function
 int main(int argc, char* argv[]){
     if(processArgs(argc, argv)) {
         printUsage();
@@ -92,10 +98,12 @@ int main(int argc, char* argv[]){
     return processAll();
 }
 
+// Sorting function for labels based on length
 int length_sort(const std::string a, const std::string b) {
     return a.length() > b.length();
 }
 
+// Function to map labels to addresses
 void mapLabels() {
     int address = 0;
     for(std::string& s : asmFromFile){
@@ -111,6 +119,7 @@ void mapLabels() {
     std::sort(labelNames.begin(), labelNames.end(),length_sort);
 }
 
+// Function to process all steps of the assembler
 int processAll(){
     //preprocessor
     readAsmFromFile();
@@ -125,11 +134,12 @@ int processAll(){
     return 0;
 }
 
+// Function to check if a string can be parsed as an integer
 bool tryParseInt(const std::string& toParse, int& buffer) {
     try {
         long long longBuffer = std::stoll(toParse);
         if(longBuffer > INT32_MAX || longBuffer < INT32_MIN) {
-            std::cerr << "number " << longBuffer << " exceeds 32bit limit!" << std::endl;
+            std::cerr << "number " << longBuffer << " exceeds 32-bit limit!" << std::endl;
             return false;
         }
         buffer = (int)longBuffer;
@@ -140,6 +150,7 @@ bool tryParseInt(const std::string& toParse, int& buffer) {
     return true;
 }
 
+// Function to perform the assembly process
 int assemble(){
     mapFunctionNumbers();
     for(std::string s : asmFromFile){
@@ -194,7 +205,7 @@ int assemble(){
         int machineCodeInt = 0;
 
         if(operand >= 32 && !immediate && !options.extendedMemory) {
-            std::cerr << "Warning exectution will go out of bounds!" << std::endl;
+            std::cerr << "Warning execution will go out of bounds!" << std::endl;
         }
 
         if(operand >= 8192){
@@ -210,6 +221,7 @@ int assemble(){
     return 0;
 }
 
+// Function to map function names to numbers
 void mapFunctionNumbers(){
     functionNumbers["JMP"] = 0;
     functionNumbers["JRP"] = 1;
@@ -230,6 +242,7 @@ void mapFunctionNumbers(){
     functionNumbers["GET"] = 15;
 }
 
+// Function to trim leading and trailing whitespaces from a string
 void trim(std::string &s) {
     //Check if the line variable is empty
     if (s.empty())
@@ -245,6 +258,7 @@ void trim(std::string &s) {
         s = s.substr(0,end+1);
 }
 
+// Function to replace labels with their corresponding addresses
 void removeLabels() {
     for (std::string &line : asmFromFile)
     {
@@ -259,6 +273,7 @@ void removeLabels() {
     }   
 }
 
+// Function to remove comments and empty lines from assembly code
 void removeCommentsAndEmptyLines() {
     for (std::string& s : asmFromFile) {
         size_t pos = s.find(';');
@@ -274,9 +289,9 @@ void removeCommentsAndEmptyLines() {
         ),
         asmFromFile.end()
     );
-
 }
 
+// Function to write machine code to a file
 void writeMachineCodeToFile(){
     std::ofstream file(options.outputFile);
 
@@ -292,6 +307,7 @@ void writeMachineCodeToFile(){
     std::cout << "Machine code written to " << options.outputFile << std::endl;
 }
 
+// Function to read assembly code from a file
 void readAsmFromFile(){
     std::string fileName = options.inputFile;
     std::ifstream file(fileName);
